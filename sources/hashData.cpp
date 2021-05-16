@@ -13,7 +13,7 @@
 #include "iostream"
 #include "picosha2.h"
 
-boost::log ::trivial::severity_level whatIsLevel(std::string logLevel) {
+boost::log ::trivial::severity_level whatIsLevel(std::string logLevel) { //устанавливаю уровень логирования
   if (logLevel.empty()) {
     return boost::log::trivial::severity_level::error;
   } else if (logLevel == "warning") {
@@ -26,29 +26,29 @@ boost::log ::trivial::severity_level whatIsLevel(std::string logLevel) {
 void rocksMapHasher::hashStorage(std::string familyName,
                                  std::map<std::string, std::string> kvStorage,
                                  std::string logLevel) {
-  std::map<std::string, std::string> hashed;
-  for (auto const& kv : kvStorage) {
-    std::string hash_hex_str;
-    picosha2::hash256_hex_string(kv.first + kv.second, hash_hex_str);
-    hashed[kv.first] = hash_hex_str;
+  std::map<std::string, std::string> hashed; //создаю словарь где будут хранится хэшированные данные (квСторэдж это не хэшированные данные)
+  for (auto const& kv : kvStorage) { //иду по каждому эл-у словаря и хэширую их
+    std::string hash_hex_str;//строка для хэшированной строки
+    picosha2::hash256_hex_string(kv.first + kv.second, hash_hex_str);//хэш256.... хэширует, 1арг строка которую будем хэшировать,2арг ссылка на переменную куда положу хэшированные данные
+    hashed[kv.first] = hash_hex_str; //в словрь хэшт добавляю новый элемент, причем квФёрст ключ из нехэшированной базы, значение этого ключа будет уже хэш стркоа
 
     boost::log::core::get()->set_filter(boost::log::trivial::severity >=
                                         whatIsLevel(logLevel));
 
-    BOOST_LOG_TRIVIAL(info) << "Family " << familyName << "->"
+    BOOST_LOG_TRIVIAL(info) << "Family " << familyName << "->" //лог вывожу для вывода в консоль(вывод в консоль результата лабы)
 
                             << kv.first << "  hashed";
   }
   mutex.lock();
-  hashedMap_[familyName] = hashed;
-  hashed.clear();
-  mutex.unlock();
+  hashedMap_[familyName] = hashed; //заполняю словрь бд хэшированными семействами (бд где значения это семейства)
+  hashed.clear(); //очищаю словарь семейств
+  mutex.unlock(); //разблокирую мутекс
 }
 
-void rocksMapHasher::startHashing(std::string familyName,
+void rocksMapHasher::startHashing(std::string familyName, //
                                   std::map<std::string, std::string> kvStorage,
                                   std::string logLevel) {
-  familyPool_.enqueue([this, familyName, kvStorage, logLevel]() {
-    this->hashStorage(familyName, kvStorage, logLevel);
+  familyPool_.enqueue([this, familyName, kvStorage, logLevel]() { //добавляю задачу в пулл потоков через лямбда ф-ию (начинается с кв скобок) передаю сам объект класса роксмэпхэшер, название семейства, нехэированные данные одного семейства,уровень логирования
+    this->hashStorage(familyName, kvStorage, logLevel); //просто вызываю метод хэш сторэдж
   });
 }

@@ -16,23 +16,23 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[]) {
   po::options_description desc(
-      "Usage:\n  dbcs [options] <path/to/input/storage.db>\nMust have options");
-  desc.add_options()("help", "produce help message")(
-      "log-level", po::value<std::string>(),
-      "info|warning|error \ndefault: error")("thread-count", po::value<int>(),
+      "Usage:\n  dbcs [options] <path/to/input/storage.db>\nMust have options"); //описание скрипта для ком строки(название,
+  desc.add_options()("help", "produce help message")( //c помощью метода эдд опшинс добавляю аргументы принимаемые скриптом
+      "log-level", po::value<std::string>(), //лог-лвл - название аргумента,
+      "info|warning|error \ndefault: error")("thread-count", po::value<int>(), //описание лог-лвла
                                              "default: count of logical "
-                                             "core")("output",
+                                             "core")("output", //путь для записи резов
                                                      po::value<std::string>(),
                                                      "<path/to/output/"
                                                      "storage.db>\ndefault:"
                                                      " <path/to/input/"
                                                      "dbcs-storage.db>");
 
-  po::variables_map vm;
-  po::store(po::parse_command_line(argc, argv, desc), vm);
-  po::notify(vm);
+  po::variables_map vm; //вэриэбл словарь который хранит аргументы ком строки, вм название слоаваря ключ для которого лог левел,например
+  po::store(po::parse_command_line(argc, argv, desc), vm); //парсит и записывает данные в словрь
+  po::notify(vm); //нотификейшн - уведомления
 
-  if (vm.count("help")) {
+  if (vm.count("help")) { //возвращает дескрипшн если в ком строку вбить --хелп
     std::cout << desc << "\n";
     return 1;
   }

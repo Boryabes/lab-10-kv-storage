@@ -25,7 +25,7 @@ class rocksdbWrapper {
  private:
   int columnSize_; //кол-во ключей
   int familyNum_; //кол-во семейств
-  std::string path_; //путь где будет хранится
+  std::string path_; //путь где будет хранится бд
   rocksdb::DB* db_{}; //указатель по которому будет хранится бд (методу роксдбопен передаю указатель)
   std::vector<std::string> families_; //список семейств
   rocksMapHasher& hasherObj_;// ссылка на объекту которму передаю прочитанное семейство
@@ -37,7 +37,7 @@ class rocksdbWrapper {
       : columnSize_(columns),
         familyNum_(family),
         path_(std::move(path)),
-        hasherObj_(hasher) {}
+        hasherObj_(hasher) {} //ссылка на объект класса роксмэпхэшер
   rocksdbWrapper(std::map<std::string, std::map<std::string, std::string>> mapa,
                  std::string path, rocksMapHasher& hasher) //передаю мапу и из этого словаря создаю новую бд с заполненными значениями из этого словаря
       : columnSize_(0),

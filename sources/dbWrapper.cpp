@@ -108,7 +108,7 @@ void rocksdbWrapper::migrateDataToMap(std::string logLevel) { //метод от�
     kvStorage.clear(); //очищаю словарь семейств т.к. уже передал данные хэшеру
     assert(it->status().ok());
 
-    for (auto handle : handles) {
+    for (auto& handle : handles) { //уничтожение хэнделов (сообщение с дисе)
       status = db_->DestroyColumnFamilyHandle(handle);
       assert(status.ok());
     }
@@ -124,13 +124,13 @@ void rocksdbWrapper::createOutputDatabase() { //метод создает баз
   rocksdb::Status status = rocksdb::DB::Open(options, path_, &db_); //создаю новую бд передаю аргументы
   if (!status.ok()) std::cerr << status.ToString() << std::endl;
 
-  for (auto const& x : mapa_) {
+  for (auto const& x : mapa_) { //итерируюсь по словарю ( в этом словаре ключи - название семейств) и заполняю семействами
     if (x.first ==  "default"){ //создаю семейство хэшированное
       continue; //переход на следующие итерацию
     }
-    rocksdb::ColumnFamilyHandle* cf;
+    rocksdb::ColumnFamilyHandle* cf; //переменная указатель на дескриптор семейства хэндл
     status =
-        db_->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), x.first, &cf);
+        db_->CreateColumnFamily(rocksdb::ColumnFamilyOptions(), x.first, &cf); //создаю семейство первый арг опции, потом название(х.фёрст это название семейства, ампер сф  ссылка на хэндл
     assert(status.ok());
     db_->DestroyColumnFamilyHandle(cf);
   }
@@ -139,29 +139,26 @@ void rocksdbWrapper::createOutputDatabase() { //метод создает баз
 
   std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
 
-  column_families.push_back(rocksdb::ColumnFamilyDescriptor(
-      rocksdb::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions()));
-
-  for (auto& family : mapa_) {
+  for (auto& family : mapa_) { //в массив дескрипторов закидываю семейства
     column_families.push_back(rocksdb::ColumnFamilyDescriptor(
         family.first, rocksdb::ColumnFamilyOptions()));
   }
 
   std::vector<rocksdb::ColumnFamilyHandle*> handles;
   status = rocksdb::DB::Open(rocksdb::DBOptions(), path_, column_families,
-                             &handles, &db_);
+                             &handles, &db_); //открываем бд с семействами которые я добавил в колумн фэмилис
 
   assert(status.ok());
-  for (size_t i = 0;i<mapa_.size();++i) {
-    for (auto& kv : mapa_[handles[i]->GetName()]){
-      status = db_->Put(rocksdb::WriteOptions(), handles[i],
-                        rocksdb::Slice(kv.first),
-                        rocksdb::Slice(kv.second));
+  for (size_t i = 0;i<mapa_.size();++i) { //заполняю новую базу значениями, иду по семейству
+    for (auto& kv : mapa_[handles[i]->GetName()]){ //иду по словарю в семействе
+      status = db_->Put(rocksdb::WriteOptions(), handles[i], //пут-записыать значение в базу (первый арг опция записи, хэндл - семейство
+                        rocksdb::Slice(kv.first), // - задают ключ (слайс конструктор класса)
+                        rocksdb::Slice(kv.second)); // - задает значение
       assert(status.ok());
     }
   }
 
-  for (auto handle : handles) {
+  for (auto& handle : handles) { //подчищаю хэндэлы
     status = db_->DestroyColumnFamilyHandle(handle);
     assert(status.ok());
   }
