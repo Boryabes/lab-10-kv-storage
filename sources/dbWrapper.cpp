@@ -56,50 +56,28 @@ void rocksdbWrapper::pushData() { //заполняю пустую бд данн�
     }
   }
   for (auto handle : handles) { //каждый хэндлс вырубаю, применяю метод дестрой хэндлс
-    status = db_->DestroyColumnFamilyHandle(handle);
+    status = db_->DestroyColumnFamilyHandle(handle); //Используйте этот метод для
+    //закрыть семейство столбцов вместо непосредственного удаления дескриптора семейства столбцов
     assert(status.ok());
   }
 
   delete db_;
 }
-
-
 void rocksdbWrapper::migrateDataToMap(std::string logLevel) { //метод открывает заполненную бд и переносит все данные в словарь
   rocksdb::Options options;
-
-  std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
-  column_families.push_back(rocksdb::ColumnFamilyDescriptor(
-      rocksdb::kDefaultColumnFamilyName, rocksdb::ColumnFamilyOptions()));
   std::vector<rocksdb::ColumnFamilyHandle*> handles;
-  rocksdb::Status status = rocksdb::DB::OpenForReadOnly( //открываю дефолтное семейство
-      rocksdb::DBOptions(), path_, column_families, &handles, &db_);
-
-  rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions()); //итератор чтобы идти по всем значениям
   std::map<std::string, std::string> kvStorage;
-  for (it->SeekToFirst(); it->Valid(); it->Next()) {
-    kvStorage[it->key().ToString()] = it->value().ToString();
-  }
-  kvStorage.clear();
-  assert(it->status().ok()); //77-83 читаю дефолтное семейство и заполняю словарь данными из этого семейства
-
-  for (auto handle : handles) { //каждый хэндлс вырубаю, применяю метод дестрой хэндлс
-    status = db_->DestroyColumnFamilyHandle(handle);
-    assert(status.ok());
-  }
-
-  handles.clear(); //очищаю вектор дескрипторов (там хранится всего один дескр семейства дефолт)
-  delete it; //очищаю итератор с помощью которого читаю все значения
-  delete db_;
-
+  std::vector<rocksdb::ColumnFamilyDescriptor> column_families;
   for (const auto& family : families_) { //иду по всем остальным семействам
+
     column_families.push_back(rocksdb::ColumnFamilyDescriptor(
         family, rocksdb::ColumnFamilyOptions()));
 
-    status = rocksdb::DB::OpenForReadOnly(rocksdb::DBOptions(), path_,
+    rocksdb::Status status = rocksdb::DB::OpenForReadOnly(rocksdb::DBOptions(), path_,
                                           column_families, &handles, &db_);
     assert(status.ok());
+    rocksdb::Iterator* it = db_->NewIterator(rocksdb::ReadOptions()); //итератор чтобы идти по всем значениям
 
-    it = db_->NewIterator(rocksdb::ReadOptions());
     for (it->SeekToFirst(); it->Valid(); it->Next()) { //брал из доки как запустить итератор
       kvStorage[it->key().ToString()] = it->value().ToString(); //айти кей получаю ключ, айтивэлью получаю значение
     } //102-105 читаю данные из бд и переношу в словрь (ЗДЕСЬ Я ИМЕЮ ГОТОВЫЙ СЛОВРЬ СО ВСЕМИ ДАННЫМИ И ДАЛЕЕ ПЕРЕДАЮ ВСЕ ДАННЫЕ ХЭШЕРУ)
@@ -107,13 +85,12 @@ void rocksdbWrapper::migrateDataToMap(std::string logLevel) { //метод от�
 
     kvStorage.clear(); //очищаю словарь семейств т.к. уже передал данные хэшеру
     assert(it->status().ok());
-
     for (auto& handle : handles) { //уничтожение хэнделов (сообщение с дисе)
       status = db_->DestroyColumnFamilyHandle(handle);
       assert(status.ok());
     }
+    delete it;
   }
-  delete it;
   delete db_;
 }
 

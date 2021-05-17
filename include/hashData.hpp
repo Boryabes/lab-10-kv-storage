@@ -19,19 +19,19 @@
 #include "utility"
 class rocksMapHasher {
  private:
-  std::map<std::string, std::map<std::string, std::string>> hashedMap_; //словрь в который я записываю хэшированную бд
-  ThreadPool familyPool_; //пуллпотоков для многопоточности, туда пишу задачи, когда прочитаю семейства в дб врапере и добавляю задачу в пулл потоков
-  std::mutex mutex; //блокировка потока когда писать в словарь с хэшированными данными(потому что несклько потоков одновременно могут писать туда)(в хэштмэп)
+  std::map<std::string, std::map<std::string, std::string>> hashedMap_;
+  ThreadPool familyPool_;
+  std::mutex mutex;
 
  public:
-  std::map<std::string, std::map<std::string, std::string>> getHashedMap() { //возвращает хэшированнй словарь
+  std::map<std::string, std::map<std::string, std::string>> getHashedMap() {
     return hashedMap_;
   }
-  void startHashing(std::string fimilyName, //вызываю с дб врапера, когда прочитал семейство запускаю этот метод чтобы начать хэшировать
-                    std::map<std::string, std::string> kvStorage, //1арг - название семейства, 2арг- словарь в котором хранятся данные семейства
-                    std::string logLevel); //уровень логирования
-  explicit rocksMapHasher(int threadNum) : familyPool_(threadNum) {} //конструктор,передаю ему кол-во потоков максимальное способное одновремено обрабатывать семейства, сразу инициализирую поле этого класса
-  void hashStorage(std::string familyName, //метод для хэширования
+  void startHashing(std::string fimilyName,
+                    std::map<std::string, std::string> kvStorage,
+                    std::string logLevel);
+  explicit rocksMapHasher(int threadNum) : familyPool_(threadNum) {}
+  void hashStorage(std::string familyName,
                    std::map<std::string, std::string> kvStore,
                    std::string logLevel);
 };

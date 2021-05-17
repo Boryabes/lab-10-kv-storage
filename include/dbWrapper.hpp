@@ -23,23 +23,23 @@
 #include "rocksdb/db.h"
 class rocksdbWrapper {
  private:
-  int columnSize_; //кол-во ключей
-  int familyNum_; //кол-во семейств
-  std::string path_; //путь где будет хранится бд
-  rocksdb::DB* db_{}; //указатель по которому будет хранится бд (методу роксдбопен передаю указатель)
-  std::vector<std::string> families_; //список семейств
-  rocksMapHasher& hasherObj_;// ссылка на объекту которму передаю прочитанное семейство
-  std::map<std::string, std::map<std::string, std::string>> mapa_; //словарь представляет базу данных
+  int columnSize_;
+  int familyNum_;
+  std::string path_;
+  rocksdb::DB* db_{};
+  std::vector<std::string> families_;
+  rocksMapHasher& hasherObj_;
+  std::map<std::string, std::map<std::string, std::string>> mapa_;
 
  public:
-  rocksdbWrapper(int columns, int family, std::string path, //консткуртор для создания пустой бд
+  rocksdbWrapper(int columns, int family, std::string path,
                  rocksMapHasher& hasher)
       : columnSize_(columns),
         familyNum_(family),
         path_(std::move(path)),
-        hasherObj_(hasher) {} //ссылка на объект класса роксмэпхэшер
+        hasherObj_(hasher) {}
   rocksdbWrapper(std::map<std::string, std::map<std::string, std::string>> mapa,
-                 std::string path, rocksMapHasher& hasher) //передаю мапу и из этого словаря создаю новую бд с заполненными значениями из этого словаря
+                 std::string path, rocksMapHasher& hasher)
       : columnSize_(0),
         familyNum_(mapa.size()),
         path_(path),
